@@ -1,34 +1,35 @@
-class EvaluationError(Exception):
+class EvaluatorError(Exception):
     pass
 
+class Evaluator:
+    @staticmethod
+    def evaluate(node):
+        # Case 1: Number node
+        if hasattr(node, 'value'):
+            return node.value
 
-def evaluate(node):
-    # Case 1: Number
-    if hasattr(node, 'value'):
-        return node.value
+        # Case 2: Binary operation
+        if hasattr(node, 'left') and hasattr(node, 'right'):
+            left_val = Evaluator.evaluate(node.left)
+            right_val = Evaluator.evaluate(node.right)
 
-    # Case 2: Binary Operation
-    if hasattr(node, 'left') and hasattr(node, 'right'):
-        left_val = evaluate(node.left)
-        right_val = evaluate(node.right)
+            op = node.operator.type
 
-        op = node.operator.type
+            if op == "PLUS":
+                return left_val + right_val
 
-        if op == "PLUS":
-            return left_val + right_val
+            elif op == "MINUS":
+                return left_val - right_val
 
-        elif op == "MINUS":
-            return left_val - right_val
+            elif op == "MULTIPLY":
+                return left_val * right_val
 
-        elif op == "MULTIPLY":
-            return left_val * right_val
+            elif op == "DIVIDE":
+                if right_val == 0:
+                    raise EvaluatorError("Division by zero")
+                return left_val / right_val
 
-        elif op == "DIVIDE":
-            if right_val == 0:
-                raise EvaluationError("Division by zero")
-            return left_val / right_val
-
-    raise EvaluationError("Invalid AST node")
+        raise EvaluatorError("Invalid AST node")
 
 
 # 🔥 TEST BLOCK
@@ -59,4 +60,4 @@ if __name__ == "__main__":
         NumberNode(2),
     )
    ) 
-    print(evaluate(tree)),
+    print(Evaluator.evaluate(tree)),
