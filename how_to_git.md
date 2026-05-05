@@ -3,7 +3,7 @@
 
 Open terminal (or VS Code terminal):
 
-git clone https://github.com/your-username/math-expression-parser.git
+git clone https://github.com/ramiell03/python-parser.git
 cd math-expression-parser
 
 👉 This downloads the project to your machine.
@@ -45,30 +45,13 @@ git pull origin main
 
 👉 This ensures you have the latest version.
 
-🔷 5. Create Your Own Branch (VERY IMPORTANT)
-
-Never work directly on main.
-
-git checkout -b your-feature-name
-
-Examples:
-
-git checkout -b tokenizer-module
-git checkout -b parser-module
-🔷 6. Make Changes in VS Code
-Edit files
-Add new files
-Save changes
 🔷 7. Commit Your Work
 git add .
 git commit -m "Implemented tokenizer logic"
 🔷 8. Push to GitHub
-git push origin your-feature-name
+git push origin main
 
-Then:
 
-Go to GitHub
-Click “Compare & Pull Request”
 🔷 9. Markdown (README) Preview in VS Code
 ✅ Open README.md
 👀 Preview it:
@@ -128,8 +111,8 @@ Use triple backticks for code blocks
 Every time you work:
 
 git pull origin main
-git checkout -b your-branch
+
 # code...
 git add .
 git commit -m "your work"
-git push origin your-branch
+git push origin main
