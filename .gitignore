@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+src/api/static/
+__pycache__/
+*.pyc
+venv/
 # Virtual environment
 venv/
 env/
