@@ -3,10 +3,12 @@ from dataclasses import dataclass
 class LexerError(Exception):
     pass
 
+
 @dataclass
 class Token:
     type: str
     value: any = None
+
 
 NUMBER = "NUMBER"
 PLUS = "PLUS"
@@ -33,12 +35,14 @@ class Tokenizer:
                 self.i += 1
                 continue
 
-            # Numbers
+            # NUMBER
             if char.isdigit() or char == '.':
                 num_str = char
                 self.i += 1
 
-                while self.i < len(self.text) and (self.text[self.i].isdigit() or self.text[self.i] == '.'):
+                while self.i < len(self.text) and (
+                    self.text[self.i].isdigit() or self.text[self.i] == '.'
+                ):
                     num_str += self.text[self.i]
                     self.i += 1
 
@@ -52,7 +56,7 @@ class Tokenizer:
                 tokens.append(Token(NUMBER, value))
                 continue
 
-            # Operators
+            # OPERATORS
             if char == '+':
                 tokens.append(Token(PLUS, char))
             elif char == '-':
@@ -72,9 +76,3 @@ class Tokenizer:
 
         tokens.append(Token(EOF))
         return tokens
-
-#test block
-if __name__ == "__main__":
-    expr = "12 + 3.5 * (2 - 1)"
-    tokenizer = Tokenizer(expr)
-    print(tokenizer.tokenize())

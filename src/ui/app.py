@@ -1,129 +1,141 @@
 import streamlit as st
 import requests
-import os  
+import base64
+import os
 
+# ----------------------------
+# CONFIG
+# ----------------------------
 st.set_page_config(
     page_title="Math Expression Parser",
     layout="centered"
 )
 
 st.title("🧮 Math Expression Parser")
-st.markdown("Enter a mathematical expression to parse, tokenize, and evaluate.")
+st.markdown("Enter a mathematical expression to analyze.")
 
-API_URL = "http://localhost:8000"
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
+
+# ----------------------------
+# INPUT
+# ----------------------------
 expression = st.text_input(
     "Expression",
     value="3 + 4 * 2",
-    placeholder="e.g., (10 - 2) / 4 + 3 * 5"
+    placeholder="e.g. (10 - 2) / 4 + 3 * 5"
 )
 
 col1, col2, col3 = st.columns(3)
 
-with col1:
-    evaluate_btn = st.button("Evaluate", use_container_width=True)
-with col2:
-    tokens_btn = st.button("Tokens", use_container_width=True)
-with col3:
-    ast_btn = st.button("AST", use_container_width=True)
+evaluate_btn = col1.button("Evaluate")
+
+tokens_btn = col2.button("Tokens")
+
+ast_btn = col3.button("AST")
 
 st.divider()
 
-# 🔷 EVALUATE
+
+# ----------------------------
+# EVALUATE
+# ----------------------------
 if evaluate_btn:
-    with st.spinner("Evaluating..."):
-        try:
-            response = requests.post(
-                f"{API_URL}/evaluate",
-                json={"expression": expression}
-            )
+    try:
+        response = requests.post(
+            f"{API_URL}/evaluate",
+            json={"expression": expression}
+        )
 
-            if response.status_code == 200:
-                data = response.json()
-                st.success(f"Result: **{data['result']}**")
-            else:
-                st.error(f"Error: {response.json()['detail']}")
+        data = response.json()
 
-        except requests.exceptions.ConnectionError:
-            st.error("❌ Cannot connect to API. Make sure the server is running on port 8000.")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+        if response.status_code == 200:
+            st.success(f"Result: {data['result']}")
+        else:
+            st.error(data.get("detail", "Error"))
+
+    except Exception as e:
+        st.error(str(e))
 
 
-# 🔷 TOKENS
+# ----------------------------
+# TOKENS
+# ----------------------------
 if tokens_btn:
-    with st.spinner("Tokenizing..."):
-        try:
-            response = requests.post(
-                f"{API_URL}/tokens",
-                json={"expression": expression}
-            )
+    try:
+        response = requests.post(
+            f"{API_URL}/tokens",
+            json={"expression": expression}
+        )
 
-            if response.status_code == 200:
-                data = response.json()
-                st.subheader("Tokens")
+        data = response.json()
 
-                for token in data['tokens']:
-                    if token['type'] != 'EOF':
-                        st.code(f"{token['type']}: {token['value']}")
+        if response.status_code == 200:
+            st.subheader("Tokens")
 
-            else:
-                st.error(f"Error: {response.json()['detail']}")
+            for t in data["tokens"]:
+                st.code(f"{t['type']} : {t['value']}")
 
-        except requests.exceptions.ConnectionError:
-            st.error("❌ Cannot connect to API. Make sure the server is running on port 8000.")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+        else:
+            st.error(data.get("detail", "Error"))
+
+    except Exception as e:
+        st.error(str(e))
 
 
-# 🔷 AST
+# ----------------------------
+# AST
+# ----------------------------
 if ast_btn:
-    with st.spinner("Building AST..."):
-        try:
-            response = requests.post(
-                f"{API_URL}/ast",
-                json={"expression": expression}
+    try:
+        response = requests.post(
+            f"{API_URL}/ast",
+            json={"expression": expression}
+        )
+
+        data = response.json()
+
+        if response.status_code == 200:
+            st.subheader("AST (Text)")
+            st.code(data["ast"], language="text")
+
+            st.subheader("AST (Graph)")
+
+            # ----------------------------
+            # IMAGE DISPLAY (NO PIL)
+            # ----------------------------
+            img_bytes = base64.b64decode(data["image_base64"])
+            st.image(img_bytes, use_container_width=True)
+
+            # ----------------------------
+            # DOWNLOAD BUTTON
+            # ----------------------------
+            st.download_button(
+                label="⬇️ Download AST Image",
+                data=requests.get(API_URL + data["image_url"]).content,
+                file_name="ast.png",
+                mime="image/png"
             )
 
-            if response.status_code == 200:
-                data = response.json()
+        else:
+            st.error(data.get("detail", "Error"))
 
-                st.subheader("Abstract Syntax Tree")
+    except Exception as e:
+        st.error(str(e))
 
-                # TEXT TREE
-                st.code(data["ast"], language="text")
 
-                # IMAGE TREE
-                st.subheader("Graphical AST")
-
-                if "image_base64" in data:
-                    import base64
-                    from io import BytesIO
-                    import PIL.Image as Image
-
-                    img_bytes = base64.b64decode(data["image_base64"])
-                    img = Image.open(BytesIO(img_bytes))
-                    st.image(img)
-                else:
-                    st.warning("No image returned from API")
-
-            else:
-                st.error(response.json()["detail"])
-
-        except Exception as e:
-            st.error(str(e))
-
+# ----------------------------
+# FOOTER
+# ----------------------------
 st.divider()
 
 st.markdown("""
-### ✅ Supported Operations
-- Addition (`+`), Subtraction (`-`)
-- Multiplication (`*`), Division (`/`)
-- Parentheses (`(` and `)`)
-- Integers and floating-point numbers
+### Supported operations
+- Addition (+), Subtraction (-)
+- Multiplication (*), Division (/)
+- Parentheses ( )
 
-### 📌 Examples
-- `3 + 4 * 2` → 11  
-- `(3 + 4) * 2` → 14  
-- `10 / 2 - 3` → 2.0  
+### Example
+- `3 + 4 * 2`
+- `(10 - 2) / 4 + 3 * 5`
 """)
